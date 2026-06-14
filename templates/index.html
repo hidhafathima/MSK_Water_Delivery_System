@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSK Water Delivery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        nav {
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: #007bff;
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #fff3cd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">Place Order</a> |
+        <a href="{{ url_for('track') }}">Track Order</a> |
+        <a href="{{ url_for('admin') }}">Admin Dashboard</a>
+    </nav>
+
+    <h1>MSK Water Delivery</h1>
+
+    {% if order %}
+    <div class="success">
+        <h2>Order Saved!</h2>
+        <p><strong>Your Unique Order ID:</strong> #{{ order.id }}</p>
+        <p>Save this ID to track your order later on the <a href="{{ url_for('track') }}">Track Order</a> page.</p>
+        <p><strong>Customer Name:</strong> {{ order.customer_name }}</p>
+        <p><strong>Phone Number:</strong> {{ order.phone_number }}</p>
+        <p><strong>Address:</strong> {{ order.address }}</p>
+        <p><strong>Water Can Quantity:</strong> {{ order.water_can_quantity }}</p>
+        <p><strong>Status:</strong> <span class="status">{{ order.status }}</span></p>
+        <p>Your order has been saved. An admin will review it soon.</p>
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        <label for="customer_name">Customer Name</label>
+        <input type="text" id="customer_name" name="customer_name" required>
+
+        <label for="phone_number">Phone Number</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+
+        <label for="address">Address</label>
+        <textarea id="address" name="address" rows="3" required></textarea>
+
+        <label for="water_can_quantity">Water Can Quantity</label>
+        <input type="number" id="water_can_quantity" name="water_can_quantity" min="1" required>
+
+        <button type="submit">Submit Order</button>
+    </form>
+</body>
+</html>

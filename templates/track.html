@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - MSK Water Delivery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        nav {
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: #007bff;
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #721c24;
+        }
+        .result {
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status-Pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-Accepted {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .status-Delivered {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-Rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">Place Order</a> |
+        <a href="{{ url_for('track') }}">Track Order</a> |
+        <a href="{{ url_for('admin') }}">Admin Dashboard</a>
+    </nav>
+
+    <h1>Track Order</h1>
+    <p>Enter your order ID to check the current delivery status.</p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if order %}
+    <div class="result">
+        <h2>Order #{{ order.id }}</h2>
+        <p><strong>Customer Name:</strong> {{ order.customer_name }}</p>
+        <p><strong>Quantity:</strong> {{ order.water_can_quantity }} water can(s)</p>
+        <p>
+            <strong>Current Status:</strong>
+            <span class="status status-{{ order.status }}">{{ order.status }}</span>
+        </p>
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        <label for="order_id">Order ID</label>
+        <input type="number" id="order_id" name="order_id" min="1" placeholder="e.g. 1" required>
+
+        <button type="submit">Track Order</button>
+    </form>
+</body>
+</html>
