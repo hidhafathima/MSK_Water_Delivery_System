@@ -3,20 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Order - MSK Water Delivery</title>
+    <title>Track Order - MSK Water Delivery v2</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 500px;
+            max-width: 520px;
             margin: 40px auto;
             padding: 20px;
         }
-        nav {
-            margin-bottom: 20px;
-        }
-        nav a {
-            color: #007bff;
-        }
+        nav { margin-bottom: 20px; }
+        nav a { color: #007bff; margin-right: 8px; }
         label {
             display: block;
             margin-top: 12px;
@@ -51,34 +47,25 @@
             margin-bottom: 20px;
             border-radius: 4px;
         }
-        .status {
+        .status, .payment {
             display: inline-block;
             padding: 4px 10px;
             border-radius: 4px;
             font-weight: bold;
         }
-        .status-Pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .status-Accepted {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-        .status-Delivered {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .status-Rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
+        .status-Pending { background-color: #fff3cd; color: #856404; }
+        .status-Accepted { background-color: #cce5ff; color: #004085; }
+        .status-Out-for-Delivery { background-color: #d1ecf1; color: #0c5460; }
+        .status-Delivered { background-color: #d4edda; color: #155724; }
+        .status-Cancelled { background-color: #f8d7da; color: #721c24; }
+        .payment-Paid { background-color: #d4edda; color: #155724; }
+        .payment-Unpaid { background-color: #fff3cd; color: #856404; }
     </style>
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}">Place Order</a> |
-        <a href="{{ url_for('track') }}">Track Order</a> |
+        <a href="{{ url_for('index') }}">Place Order</a>
+        <a href="{{ url_for('track') }}">Track Order</a>
         <a href="{{ url_for('admin') }}">Admin Dashboard</a>
     </nav>
 
@@ -93,10 +80,15 @@
     <div class="result">
         <h2>Order #{{ order.id }}</h2>
         <p><strong>Customer Name:</strong> {{ order.customer_name }}</p>
-        <p><strong>Quantity:</strong> {{ order.water_can_quantity }} water can(s)</p>
+        <p><strong>Product:</strong> {{ order.product_name }}</p>
+        <p><strong>Quantity:</strong> {{ order.quantity }}</p>
         <p>
             <strong>Current Status:</strong>
-            <span class="status status-{{ order.status }}">{{ order.status }}</span>
+            <span class="status status-{{ order.status|replace(' ', '-') }}">{{ order.status }}</span>
+        </p>
+        <p>
+            <strong>Payment Status:</strong>
+            <span class="payment payment-{{ order.payment_status }}">{{ order.payment_status }}</span>
         </p>
     </div>
     {% endif %}
@@ -104,7 +96,6 @@
     <form method="POST">
         <label for="order_id">Order ID</label>
         <input type="number" id="order_id" name="order_id" min="1" placeholder="e.g. 1" required>
-
         <button type="submit">Track Order</button>
     </form>
 </body>

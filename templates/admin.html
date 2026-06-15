@@ -3,19 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - MSK Water Delivery</title>
+    <title>Admin Dashboard - MSK Water Delivery v2</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 40px auto;
             padding: 20px;
         }
-        nav {
-            margin-bottom: 20px;
+        nav { margin-bottom: 20px; }
+        nav a { color: #007bff; margin-right: 8px; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
         }
-        nav a {
-            color: #007bff;
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 16px;
+        }
+        .stat-card h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        .stat-card p {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .search-box {
+            margin: 20px 0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 220px;
+            padding: 8px;
+        }
+        .search-box button, .btn-link {
+            padding: 8px 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
         }
         table {
             width: 100%;
@@ -24,21 +65,18 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 8px;
             text-align: left;
             vertical-align: top;
         }
-        th {
-            background-color: #f8f9fa;
-        }
-        select, button {
-            padding: 6px 10px;
-        }
-        button {
+        th { background-color: #f8f9fa; }
+        select, button { padding: 6px 8px; }
+        .update-btn {
             background-color: #28a745;
             color: white;
             border: none;
             cursor: pointer;
+            margin-top: 4px;
         }
         .empty {
             padding: 20px;
@@ -48,19 +86,56 @@
         }
         .status-Pending { color: #856404; }
         .status-Accepted { color: #004085; }
+        .status-Out-for-Delivery { color: #0c5460; }
         .status-Delivered { color: #155724; }
-        .status-Rejected { color: #721c24; }
+        .status-Cancelled { color: #721c24; }
+        .payment-Paid { color: #155724; font-weight: bold; }
+        .payment-Unpaid { color: #856404; font-weight: bold; }
+        .inline-form { margin-bottom: 6px; }
     </style>
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}">Place Order</a> |
-        <a href="{{ url_for('track') }}">Track Order</a> |
+        <a href="{{ url_for('index') }}">Place Order</a>
+        <a href="{{ url_for('track') }}">Track Order</a>
         <a href="{{ url_for('admin') }}">Admin Dashboard</a>
+        <a href="{{ url_for('admin_products') }}">Manage Products</a>
     </nav>
 
-    <h1>Admin Dashboard</h1>
-    <p>View all customer orders and update their delivery status.</p>
+    <h1>Admin Dashboard v2</h1>
+    <p>View statistics, search orders, and update delivery and payment status.</p>
+
+    <div class="stats">
+        <div class="stat-card">
+            <h3>Total Orders</h3>
+            <p>{{ stats.total_orders }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Pending Orders</h3>
+            <p>{{ stats.pending_orders }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Delivered Orders</h3>
+            <p>{{ stats.delivered_orders }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Revenue</h3>
+            <p>${{ "%.2f"|format(stats.total_revenue) }}</p>
+        </div>
+    </div>
+
+    <form class="search-box" method="GET" action="{{ url_for('admin') }}">
+        <input
+            type="text"
+            name="search"
+            placeholder="Search by order ID, customer name, or phone number"
+            value="{{ search }}"
+        >
+        <button type="submit">Search</button>
+        {% if search %}
+        <a class="btn-link btn-secondary" href="{{ url_for('admin') }}">Clear</a>
+        {% endif %}
+    </form>
 
     {% if orders %}
     <table>
@@ -69,11 +144,13 @@
                 <th>ID</th>
                 <th>Customer</th>
                 <th>Phone</th>
-                <th>Address</th>
-                <th>Cans</th>
-                <th>Status</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th>Order Status</th>
+                <th>Payment</th>
                 <th>Created</th>
-                <th>Update Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -82,21 +159,38 @@
                 <td>#{{ order.id }}</td>
                 <td>{{ order.customer_name }}</td>
                 <td>{{ order.phone_number }}</td>
-                <td>{{ order.address }}</td>
-                <td>{{ order.water_can_quantity }}</td>
-                <td class="status-{{ order.status }}">{{ order.status }}</td>
+                <td>{{ order.product_name }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>${{ "%.2f"|format(order.total_amount) }}</td>
+                <td class="status-{{ order.status|replace(' ', '-') }}">{{ order.status }}</td>
+                <td class="payment-{{ order.payment_status }}">{{ order.payment_status }}</td>
                 <td>{{ order.created_at }}</td>
                 <td>
-                    <form method="POST">
+                    <form class="inline-form" method="POST">
+                        <input type="hidden" name="action" value="update_order">
+                        <input type="hidden" name="search" value="{{ search }}">
                         <input type="hidden" name="order_id" value="{{ order.id }}">
                         <select name="status">
-                            {% for status in statuses %}
+                            {% for status in order_statuses %}
                             <option value="{{ status }}" {% if order.status == status %}selected{% endif %}>
                                 {{ status }}
                             </option>
                             {% endfor %}
                         </select>
-                        <button type="submit">Update</button>
+                        <button type="submit" class="update-btn">Update Status</button>
+                    </form>
+                    <form class="inline-form" method="POST">
+                        <input type="hidden" name="action" value="update_payment">
+                        <input type="hidden" name="search" value="{{ search }}">
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <select name="payment_status">
+                            {% for payment in payment_statuses %}
+                            <option value="{{ payment }}" {% if order.payment_status == payment %}selected{% endif %}>
+                                {{ payment }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="update-btn">Update Payment</button>
                     </form>
                 </td>
             </tr>
@@ -105,7 +199,11 @@
     </table>
     {% else %}
     <div class="empty">
+        {% if search %}
+        <p>No orders found for "{{ search }}".</p>
+        {% else %}
         <p>No orders yet. Orders will appear here when customers submit the form.</p>
+        {% endif %}
     </div>
     {% endif %}
 </body>

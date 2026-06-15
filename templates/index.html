@@ -3,26 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSK Water Delivery</title>
+    <title>MSK Water Delivery v2</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 500px;
+            max-width: 520px;
             margin: 40px auto;
             padding: 20px;
         }
-        nav {
-            margin-bottom: 20px;
-        }
-        nav a {
-            color: #007bff;
-        }
+        nav { margin-bottom: 20px; }
+        nav a { color: #007bff; margin-right: 8px; }
         label {
             display: block;
             margin-top: 12px;
             font-weight: bold;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 8px;
             margin-top: 4px;
@@ -43,37 +39,53 @@
             margin-bottom: 20px;
             border-radius: 4px;
         }
-        .status {
+        .product-option {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 4px;
+        }
+        .product-option label {
+            margin-top: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .product-price {
+            color: #555;
+            font-size: 14px;
+        }
+        .badge {
             display: inline-block;
             padding: 4px 8px;
-            background-color: #fff3cd;
             border-radius: 4px;
+            background-color: #fff3cd;
         }
     </style>
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}">Place Order</a> |
-        <a href="{{ url_for('track') }}">Track Order</a> |
+        <a href="{{ url_for('index') }}">Place Order</a>
+        <a href="{{ url_for('track') }}">Track Order</a>
         <a href="{{ url_for('admin') }}">Admin Dashboard</a>
     </nav>
 
-    <h1>MSK Water Delivery</h1>
+    <h1>MSK Water Delivery v2</h1>
 
     {% if order %}
     <div class="success">
         <h2>Order Saved!</h2>
         <p><strong>Your Unique Order ID:</strong> #{{ order.id }}</p>
-        <p>Save this ID to track your order later on the <a href="{{ url_for('track') }}">Track Order</a> page.</p>
+        <p>Save this ID to track your order on the <a href="{{ url_for('track') }}">Track Order</a> page.</p>
         <p><strong>Customer Name:</strong> {{ order.customer_name }}</p>
-        <p><strong>Phone Number:</strong> {{ order.phone_number }}</p>
-        <p><strong>Address:</strong> {{ order.address }}</p>
-        <p><strong>Water Can Quantity:</strong> {{ order.water_can_quantity }}</p>
-        <p><strong>Status:</strong> <span class="status">{{ order.status }}</span></p>
-        <p>Your order has been saved. An admin will review it soon.</p>
+        <p><strong>Product:</strong> {{ order.product_name }}</p>
+        <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+        <p><strong>Total Amount:</strong> ${{ "%.2f"|format(order.total_amount) }}</p>
+        <p><strong>Order Status:</strong> <span class="badge">{{ order.status }}</span></p>
+        <p><strong>Payment Status:</strong> <span class="badge">{{ order.payment_status }}</span></p>
     </div>
     {% endif %}
 
+    {% if products %}
     <form method="POST">
         <label for="customer_name">Customer Name</label>
         <input type="text" id="customer_name" name="customer_name" required>
@@ -84,10 +96,26 @@
         <label for="address">Address</label>
         <textarea id="address" name="address" rows="3" required></textarea>
 
-        <label for="water_can_quantity">Water Can Quantity</label>
-        <input type="number" id="water_can_quantity" name="water_can_quantity" min="1" required>
+        <p style="margin-top: 16px; font-weight: bold;">Select a Product</p>
+        {% for product in products %}
+        <div class="product-option">
+            <label>
+                <input type="radio" name="product_id" value="{{ product.id }}" required>
+                {{ product.name }} — ${{ "%.2f"|format(product.price) }}
+            </label>
+            {% if product.description %}
+            <p class="product-price">{{ product.description }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" name="quantity" min="1" value="1" required>
 
         <button type="submit">Submit Order</button>
     </form>
+    {% else %}
+    <p>No products are available right now. Please check back later.</p>
+    {% endif %}
 </body>
 </html>
